@@ -454,7 +454,7 @@ class PokemonZukan
       status_proc(target, 'sp_def',   -1, p)
       when '0017'
       status_proc(target, 'accuracy', -1, p)
-      when '0018', '0049',
+      when '0018', '0049'
       status_proc(target, 'evasion',  -1, p)
 
       when '003A'
