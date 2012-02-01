@@ -4,6 +4,33 @@ require './pokemon-zukan.rb'
 
 $zukan = PokemonZukan.new
 
+def act (pokemon, enemy, decision)
+  skill = pokemon['skill'][decision]['name']
+  printf "%sの %s！\n", pokemon['name'], skill
+  $zukan.skill_proc(pokemon, enemy, skill)
+  pokemon['skill'][decision]['pp'] -= 1
+end
+
+def act_enemy (enemy, pokemon, enemy_decision)
+  skill = enemy['skill'][enemy_decision]['name']
+  printf "あいての %sの %s！\n", enemy['name'], skill
+  $zukan.skill_proc(enemy, pokemon, skill)
+  enemy['skill'][enemy_decision]['pp'] -= 1
+end
+
+def gameover?(pokemon, enemy)
+  if pokemon['hp'] <= 0
+    puts '------------------------------'
+    printf "%s はたおれた！\n", pokemon['name']
+    return true
+  elsif enemy['hp'] <= 0
+    puts '------------------------------'
+    printf "あいての %sは たおれた！\n", enemy['name']
+    return true
+  else
+    return false
+  end
+end
 # pokemon = $zukan.pokemon('フシギダネ')
 # enemy = $zukan.pokemon('ヒトカゲ')
 
@@ -20,7 +47,8 @@ $zukan = PokemonZukan.new
 #                                              # 'シャドーボール',
 #                                              'めいそう',
 #                                             ])
-pokemon = $zukan.pokemon('アーボック', 100)
+# pokemon = $zukan.pokemon('レックウザ', 75)
+pokemon =  $zukan.pokemon('リザードン', 100)
 enemy =  $zukan.pokemon('リザードン', 100)
 
 loop do
@@ -38,33 +66,32 @@ loop do
   end
 
   print '> '
-  input = gets.to_i
+  decision = gets.to_i
   puts
 
-  action = pokemon['skill'][input]['name']
-
   enemy_decision = $zukan.make_decision(enemy, pokemon)
-  enemy_action = enemy['skill'][enemy_decision]['name']
 
-  printf "%sの %s！\n", pokemon['name'], action
-  $zukan.skill_proc(pokemon, enemy, action)
-  pokemon['skill'][input]['pp'] -= 1
-  if enemy['hp'] <= 0
-    puts '------------------------------'
-    printf "あいての %sは たおれた！\n", enemy['name']
-    break;
+  if $zukan.advance?(pokemon, decision, enemy, enemy_decision)
+    act(pokemon, enemy, decision)
+    if gameover?(pokemon, enemy)
+      break
+    end
+
+    act_enemy(enemy, pokemon, enemy_decision)
+    if gameover?(pokemon, enemy)
+      break
+    end
+  else
+    act_enemy(enemy, pokemon, enemy_decision)
+    if gameover?(pokemon, enemy)
+      break
+    end
+
+    act(pokemon, enemy, decision)
+    if gameover?(pokemon, enemy)
+      break
+    end
   end
-
-
-  printf "あいての %sの %s！\n", enemy['name'], enemy_action
-  $zukan.skill_proc(enemy, pokemon, enemy_action)
-  enemy['skill'][enemy_decision]['pp'] -= 1
-  if pokemon['hp'] <= 0
-    puts '------------------------------'
-    printf "%s はたおれた！\n", pokemon['name']
-    break;
-  end
-
 
   puts '------------------------------'
 

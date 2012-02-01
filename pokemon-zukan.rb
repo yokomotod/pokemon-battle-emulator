@@ -206,6 +206,32 @@ class PokemonZukan
     return decision
   end
 
+  def advance? (pokemon, decision, enemy, enemy_decision)
+    priority = @skill_info[pokemon['skill'][decision]['name']]['priority']
+    enemy_priority = @skill_info[enemy['skill'][enemy_decision]['name']]['priority']
+
+    if priority > enemy_priority
+      return true
+    elsif priority < enemy_priority
+      return false
+    end
+
+    speed = (pokemon['speed'] * @rank_effect[pokemon['r_speed']]).to_i
+    enemy_speed = (enemy['speed'] * @rank_effect[enemy['r_speed']]).to_i
+
+    if speed > enemy_speed
+      return true
+    elsif speed < enemy_speed
+      return false
+    end
+
+    if rand(100) > 50
+      return true
+    else
+      return false
+    end
+  end
+
   def calc_base_damage (attacker, target, skill)
     if @skill_info[skill]['category'] == 'physical'
       attacker_status = (attacker['attack'] * @rank_effect[attacker['r_attack']]).to_i
