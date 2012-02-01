@@ -146,7 +146,27 @@ class PokemonZukan
     end
   end
 
-  def pokemon (name, level = 5, skill_list = nil)
+  def pokemon (name, level = 5, 
+               k = [31, 31, 31, 31, 31, 31],
+               d = [85, 85, 85, 85, 85, 85],
+               skill_list = nil)
+
+    k_value = {
+               'hp'      => k[0],
+               'attack'  => k[1],
+               'defence' => k[2],
+               'sp_atk'  => k[3],
+               'sp_def'  => k[4],
+               'speed'   => k[5],
+    }
+    d_value = { 
+               'hp'      => d[0],
+               'attack'  => d[1],
+               'defence' => d[2],
+               'sp_atk'  => d[3],
+               'sp_def'  => d[4],
+               'speed'   => d[5],
+    }
 
     skill = Array.new
     if skill_list.nil?
@@ -173,7 +193,7 @@ class PokemonZukan
       end
     end
 
-    hp = (@pokemon_info[name]['s_hp'] * 2 + 0 + 0/4) * level / 100 + 10 + level
+    hp = (@pokemon_info[name]['s_hp'] * 2 + k_value['hp'] + d_value['hp']/4) * level / 100 + 10 + level
 
     pokemon = {
       'name'   => name,
@@ -185,7 +205,7 @@ class PokemonZukan
     }
 
     for key in ['attack', 'defence', 'sp_atk', 'sp_def', 'speed']
-      pokemon[key] = ( (@pokemon_info[name]['s_'+key] * 2 + 0 + 0/4) * level / 100 + 5 ) * 1
+      pokemon[key] = ( (@pokemon_info[name]['s_'+key] * 2 + k_value[key] + d_value[key]/4) * level / 100 + 5 ) * 1
       pokemon['r_'+key] = 0
     end
 
@@ -383,6 +403,8 @@ class PokemonZukan
     if @skill_info[skill]['power'] != '-'
       damage = damage_proc(attacker, target, skill)  
     end
+
+    sleep(1)
 
     if target['hp'] <= 0
       return

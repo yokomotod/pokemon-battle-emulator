@@ -50,7 +50,7 @@ pokemon =  $zukan.pokemon('フシギバナ', 100)
 #                                             ])
 # pokemon = $zukan.pokemon('レックウザ', 75)
 # pokemon =  $zukan.pokemon('リザードン', 100)
-enemy =  $zukan.pokemon('リザードン', 100)
+enemy =  $zukan.pokemon('リザードン', 100, [0,0,0,0,0,0], [0,0,0,0,0,0])
 # enemy =  $zukan.pokemon('ミュウツー', 100)
 
 loop do
@@ -60,6 +60,9 @@ loop do
   printf " HP:%d／%d\n", enemy['hp'], enemy['max_hp']
 
   puts
+
+  sleep(1)
+
   printf "%sは どうする？\n", pokemon['name']
 
   pokemon['skill'].each_with_index do |skill, i|
@@ -78,21 +81,29 @@ loop do
     if gameover?(pokemon, enemy)
       break
     end
+    
+    puts
 
     act_enemy(enemy, pokemon, enemy_decision)
     if gameover?(pokemon, enemy)
       break
     end
+
+    puts
   else
     act_enemy(enemy, pokemon, enemy_decision)
     if gameover?(pokemon, enemy)
       break
     end
 
+    puts
+
     act(pokemon, enemy, decision)
     if gameover?(pokemon, enemy)
       break
     end
+
+    puts
   end
 
   puts '------------------------------'
