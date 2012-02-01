@@ -259,20 +259,20 @@ class PokemonZukan
   end
 
   def calc_target_type_effect (damage, skill, target)
-    effect = 1
+    effect = 1.0
 
     target['type'].each do |target_type|
       effect *= @type_effect[@skill_info[skill]['type']][target_type]
     end
 
     case effect
-      when 2, 4
+      when 2.0, 4.0
       message = 'こうかは ばつぐんだ！'
       when 0.25, 0.5
       message = 'こうかは いまひとつの ようだ'
       when 0
       message = sprintf '%sには こうかが ない みたいだ・・・', target['name']
-      when 1
+      when 1.0
       message = nil
     end
     
@@ -323,6 +323,8 @@ class PokemonZukan
       puts message
     end
     printf "[%s ダメージ%d]\n", target['name'], damage
+
+    return damage
   end
 
   def status_proc(target, status, rank, p)
@@ -360,9 +362,19 @@ class PokemonZukan
     printf "%sの %sが %s\n", target['name'], @status_str[status], message
   end
 
+  def recovery_proc(target, damage, rate)
+    recovery = (damage * rate).to_i
+    if target['hp'] + recovery > target['max_hp']
+      recovery = target['max_hp'] - target['hp']
+    end
+
+    target['hp'] += recovery
+    printf "[%s 回復%d]", target['name'], recovery
+  end
+
   def skill_proc (attacker, target, skill)
     if @skill_info[skill]['power'] != '-'
-      damage_proc(attacker, target, skill)  
+      damage = damage_proc(attacker, target, skill)  
     end
 
     if target['hp'] <= 0
@@ -481,6 +493,9 @@ class PokemonZukan
         status_proc(attacker, 'sp_def',  1, nil)
         status_proc(attacker, 'speed',   1, nil)
       end
+
+      when '0003'
+      recovery_proc(attacker, damage, 0.5)
     end
 
     puts
