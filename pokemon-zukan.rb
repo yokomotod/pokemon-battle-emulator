@@ -496,7 +496,7 @@ class PokemonZukan
 
       when '0003', '0008'
       recovery_proc(attacker, damage, 0.5)
-      when '00D6'
+      when '0020', '00D6'
       recovery_proc(attacker, attacker['max_hp'], 0.5)
       when '0135'
       recovery_proc(target, target['max_hp'], 0.5)
