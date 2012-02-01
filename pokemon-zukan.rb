@@ -372,6 +372,13 @@ class PokemonZukan
     printf "[%s 回復%d]", target['name'], recovery
   end
 
+  def recoil_proc (target, value, rate)
+    recoil = (value * rate).to_i
+    
+    target['hp'] -= recoil
+    printf "[%s 反動ダメージ%d]", target['name'], recoil
+  end
+
   def skill_proc (attacker, target, skill)
     if @skill_info[skill]['power'] != '-'
       damage = damage_proc(attacker, target, skill)  
@@ -500,6 +507,11 @@ class PokemonZukan
       recovery_proc(attacker, attacker['max_hp'], 0.5)
       when '0135'
       recovery_proc(target, target['max_hp'], 0.5)
+
+      when '0030'
+      recoil_proc(attacker, damage, 0.25)
+      when '00C6', '00FD', '0106', '010D'
+      recoil_proc(attacker, damage, 1.0/3)
     end
 
     puts
