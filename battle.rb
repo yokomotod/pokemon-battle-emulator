@@ -34,13 +34,13 @@ end
 # pokemon = $zukan.pokemon('フシギダネ')
 # enemy = $zukan.pokemon('ヒトカゲ')
 
-# pokemon =  $zukan.pokemon('フシギバナ', 100)
+pokemon =  $zukan.pokemon('カメックス', 100)
 # pokemon =  $zukan.pokemon('フシギバナ', 50, [
 #                                              'はっぱカッター',
 #                                              'はなびらのまい',
 #                                              'こうごうせい',
 #                                              'じしん'])
-pokemon = $zukan.pokemon('アルセウス', 100)
+# pokemon = $zukan.pokemon('アルセウス', 100)
 # pokemon = $zukan.pokemon('ミュウツー', 100, [
 #                                              'サイコブレイク',
 #                                              'はどうだん',
@@ -50,8 +50,9 @@ pokemon = $zukan.pokemon('アルセウス', 100)
 #                                             ])
 # pokemon = $zukan.pokemon('レックウザ', 75)
 # pokemon =  $zukan.pokemon('リザードン', 100)
+enemy =  $zukan.pokemon('フシギバナ', 100)
 # enemy =  $zukan.pokemon('リザードン', 100, [0,0,0,0,0,0], [0,0,0,0,0,0])
-enemy =  $zukan.pokemon('ミュウツー', 100)
+# enemy =  $zukan.pokemon('ミュウツー', 100)
 
 loop do
   printf "%s Lv%d\n", pokemon['name'], pokemon['level']
