@@ -91,9 +91,11 @@ class PokemonZukan
         status_effect_p = $1
 
         power = power == '-' ? '-' : power.to_i
+        accuracy = accuracy == '-' ? '-' : accuracy.to_i
+
         @skill_info[name] = {
           'power'    => power,
-          'accuracy' => accuracy.to_i,
+          'accuracy' => accuracy,
           'max_pp'   => pp.to_i,
           'type'     => type,
           'category' => category == 'ぶつり' ? 'physical' : 'special',
@@ -245,10 +247,6 @@ class PokemonZukan
   end
 
   def calc_self_type_effect (damage, attacker, skill)
-    if @skill_info[skill]['type'] == 'ノーマル'
-      return damage
-    end
-
     if attacker['type'].select{|type| type == @skill_info[skill]['type']}.size > 0
       effect = 1.5
     else
@@ -306,10 +304,12 @@ class PokemonZukan
     rank_diff = rank_diff > 6 ? 6 : rank_diff
     rank_diff = rank_diff < -6 ? -6 : rank_diff
 
-    accuracy = (@skill_info[skill]['accuracy'] * @rank_effect_accuracy[rank_diff]).to_i
-    if rand(100) > accuracy
-      printf "しかし %sの こうげきは はずれた\n", attacker['name']
-      return
+    if @skill_info[skill]['accuracy'] != '-'
+      accuracy = (@skill_info[skill]['accuracy'] * @rank_effect_accuracy[rank_diff]).to_i
+      if rand(100) > accuracy
+        printf "しかし %sの こうげきは はずれた\n", attacker['name']
+        return
+      end
     end
 
     damage = calc_base_damage(attacker, target, skill)
@@ -346,11 +346,11 @@ class PokemonZukan
 
     case rank
     when 3
-      message = 'あがった'
+      message = 'ぐぐーんと あがった'
     when 2
       message = 'ぐーんと あがった'
     when 1
-      message = 'ぐぐーんと あがった'
+      message = 'あがった'
     when -1
       message = 'さがった'
     when -2
@@ -428,9 +428,12 @@ class PokemonZukan
       when '00D0'
       status_proc(attacker, 'attack',   1, p)
       status_proc(attacker, 'defence',  1, p)
-      when '00D3', '013C', '0147'
+      when '013C', '0147'
       status_proc(attacker, 'attack',   1, p)
       status_proc(attacker, 'sp_atk',   1, p)
+      when '00D3'
+      status_proc(attacker, 'sp_atk',   1, p)
+      status_proc(attacker, 'sp_def',   1, p)
       when '00D4'
       status_proc(attacker, 'attack',   1, p)
       status_proc(attacker, 'speed',    1, p)
