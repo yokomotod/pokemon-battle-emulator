@@ -42,6 +42,10 @@ loop do
   puts
 
   action = pokemon['skill'][input]['name']
+
+  enemy_decision = $zukan.make_decision(enemy, pokemon)
+  enemy_action = enemy['skill'][enemy_decision]['name']
+
   printf "%sの %s！\n", pokemon['name'], action
   $zukan.skill_proc(pokemon, enemy, action)
   pokemon['skill'][input]['pp'] -= 1
@@ -52,17 +56,6 @@ loop do
   end
 
 
-  enemy_decision = nil
-  best_action_score = -1
-  enemy['skill'].each_with_index do |skill, i|
-    score = $zukan.estimate_action_score(enemy, pokemon, skill['name'])
-    if score >= best_action_score
-      best_action_score = score
-      enemy_decision = i
-    end
-  end
-
-  enemy_action = enemy['skill'][enemy_decision]['name']
   printf "あいての %sの %s！\n", enemy['name'], enemy_action
   $zukan.skill_proc(enemy, pokemon, enemy_action)
   enemy['skill'][enemy_decision]['pp'] -= 1

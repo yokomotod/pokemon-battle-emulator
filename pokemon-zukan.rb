@@ -192,6 +192,20 @@ class PokemonZukan
     return pokemon
   end
 
+  def make_decision (pokemon, enemy)
+    decision = nil
+    best_action_score = -1
+    pokemon['skill'].each_with_index do |skill, i|
+      score = $zukan.estimate_action_score(pokemon, enemy, skill['name'])
+      if score >= best_action_score
+        best_action_score = score
+        decision = i
+      end
+    end
+
+    return decision
+  end
+
   def calc_base_damage (attacker, target, skill)
     if @skill_info[skill]['category'] == 'physical'
       attacker_status = (attacker['attack'] * @rank_effect[attacker['r_attack']]).to_i
