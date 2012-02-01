@@ -365,6 +365,10 @@ class PokemonZukan
       damage_proc(attacker, target, skill)  
     end
 
+    if target['hp'] <= 0
+      return
+    end
+
     p = @skill_info[skill]['status_effect_p']
 
     case @skill_info[skill]['effect_code']
