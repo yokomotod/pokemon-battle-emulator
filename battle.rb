@@ -48,8 +48,8 @@ end
 #                                              'めいそう',
 #                                             ])
 # pokemon = $zukan.pokemon('レックウザ', 75)
-pokemon =  $zukan.pokemon('ジュカイン', 100)
-enemy =  $zukan.pokemon('カメックス', 100)
+pokemon =  $zukan.pokemon('ピジョット', 100)
+enemy =  $zukan.pokemon('ラッタ', 100)
 
 loop do
   printf "%s Lv%d\n", pokemon['name'], pokemon['level']

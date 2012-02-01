@@ -362,8 +362,8 @@ class PokemonZukan
     printf "%sの %sが %s\n", target['name'], @status_str[status], message
   end
 
-  def recovery_proc(target, damage, rate)
-    recovery = (damage * rate).to_i
+  def recovery_proc(target, value, rate)
+    recovery = (value * rate).to_i
     if target['hp'] + recovery > target['max_hp']
       recovery = target['max_hp'] - target['hp']
     end
@@ -494,8 +494,12 @@ class PokemonZukan
         status_proc(attacker, 'speed',   1, nil)
       end
 
-      when '0003'
+      when '0003', '0008'
       recovery_proc(attacker, damage, 0.5)
+      when '00D6'
+      recovery_proc(attacker, attacker['max_hp'], 0.5)
+      when '0135'
+      recovery_proc(target, target['max_hp'], 0.5)
     end
 
     puts
