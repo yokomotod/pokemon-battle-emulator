@@ -45,7 +45,7 @@ end
 # enemy = $zukan.pokemon('ヒトカゲ')
 
 # pokemon =  $zukan.pokemon('リザードン', 100)
-pokemon =  $zukan.pokemon('フシギバナ', 100)
+pokemon =  $zukan.pokemon('ドクケイル', 100)
 # pokemon =  $zukan.pokemon('フシギバナ', 50, [
 #                                              'はっぱカッター',
 #                                              'はなびらのまい',
@@ -62,7 +62,7 @@ pokemon =  $zukan.pokemon('フシギバナ', 100)
 # pokemon = $zukan.pokemon('レックウザ', 75)
 # pokemon =  $zukan.pokemon('リザードン', 100)
 # enemy =  $zukan.pokemon('フシギバナ', 100)
-enemy =  $zukan.pokemon('カメックス', 100)
+enemy =  $zukan.pokemon('カメックス', 70)
 # enemy =  $zukan.pokemon('フシギバナ', 100)
 # enemy =  $zukan.pokemon('リザードン', 100, [0,0,0,0,0,0], [0,0,0,0,0,0])
 # enemy =  $zukan.pokemon('ミュウツー', 100)
