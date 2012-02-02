@@ -34,7 +34,8 @@ end
 # pokemon = $zukan.pokemon('フシギダネ')
 # enemy = $zukan.pokemon('ヒトカゲ')
 
-pokemon =  $zukan.pokemon('カメックス', 100)
+pokemon =  $zukan.pokemon('レアコイル', 100)
+# pokemon =  $zukan.pokemon('フシギバナ', 200)
 # pokemon =  $zukan.pokemon('フシギバナ', 50, [
 #                                              'はっぱカッター',
 #                                              'はなびらのまい',
@@ -50,14 +51,23 @@ pokemon =  $zukan.pokemon('カメックス', 100)
 #                                             ])
 # pokemon = $zukan.pokemon('レックウザ', 75)
 # pokemon =  $zukan.pokemon('リザードン', 100)
+# enemy =  $zukan.pokemon('フシギバナ', 100)
+# enemy =  $zukan.pokemon('カメックス', 100)
 enemy =  $zukan.pokemon('フシギバナ', 100)
 # enemy =  $zukan.pokemon('リザードン', 100, [0,0,0,0,0,0], [0,0,0,0,0,0])
 # enemy =  $zukan.pokemon('ミュウツー', 100)
 
 loop do
   printf "%s Lv%d\n", pokemon['name'], pokemon['level']
+  if pokemon['state'].size != 0
+    printf " ### %s ###\n", pokemon['state'].keys.map{|x| $zukan.state_str[x] }.join(' ')
+  end
   printf " HP:%d／%d\n", pokemon['hp'], pokemon['max_hp']
+
   printf "%s Lv%d\n", enemy['name'], enemy['level']
+  if enemy['state'].size != 0
+    printf " ### %s ###\n", enemy['state'].keys.map{|x| $zukan.state_str[x] }.join(' ')
+  end
   printf " HP:%d／%d\n", enemy['hp'], enemy['max_hp']
 
   puts

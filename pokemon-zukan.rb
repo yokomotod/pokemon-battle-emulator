@@ -1,7 +1,13 @@
 # :coding : UTF-8
 
 class PokemonZukan
+  attr_reader :state_str
+
   def initialize
+    @state_str = {
+      'PRZ' => 'まひ',
+    }
+
     @status_str = {
       'attack'  => 'こうげき',
       'defence' => 'ぼうぎょ',
@@ -49,6 +55,16 @@ class PokemonZukan
       2 => 1.0/4.0,
       3 => 1.0/3.0,
       4 => 1.0/2.0,
+    }
+
+    @state_message = { 
+      'FRZ_START'    => 'は こおりついた',
+      'FRZ_CONTINUE' => 'は こおってしまって うごけない',
+      'FRZ_END'      => 'の こおりが とけた',
+
+      'PRZ_START'    => 'は まひして わざが でにくくなった',
+      'PRZ_CONTINUE' => 'は からだが しびれて うごけない',
+      'PRZ_END'      => 'の しびれが とれた',
     }
 
     @type_effect = Hash.new
@@ -211,6 +227,8 @@ class PokemonZukan
 
     pokemon['r_accuracy'] = pokemon['r_evasion'] = pokemon['r_critical'] = 0
 
+    pokemon['state'] = Hash.new
+
     return pokemon
   end
 
@@ -228,6 +246,16 @@ class PokemonZukan
     return decision
   end
 
+  def calc_speed (pokemon)
+    speed = (pokemon['speed'] * @rank_effect[pokemon['r_speed']]).to_i
+
+    if pokemon['state'].key?('PRZ')
+      speed = (speed*0.25).to_i
+    end
+
+    return speed
+  end
+
   def advance? (pokemon, decision, enemy, enemy_decision)
     priority = @skill_info[pokemon['skill'][decision]['name']]['priority']
     enemy_priority = @skill_info[enemy['skill'][enemy_decision]['name']]['priority']
@@ -238,8 +266,8 @@ class PokemonZukan
       return false
     end
 
-    speed = (pokemon['speed'] * @rank_effect[pokemon['r_speed']]).to_i
-    enemy_speed = (enemy['speed'] * @rank_effect[enemy['r_speed']]).to_i
+    speed = calc_speed(pokemon)
+    enemy_speed = calc_speed(enemy)
 
     if speed > enemy_speed
       return true
@@ -320,18 +348,6 @@ class PokemonZukan
 
   def damage_proc(attacker, target, skill)
 
-    rank_diff = attacker['r_accuracy'] - target['r_evasion']
-    rank_diff = rank_diff > 6 ? 6 : rank_diff
-    rank_diff = rank_diff < -6 ? -6 : rank_diff
-
-    if @skill_info[skill]['accuracy'] != '-'
-      accuracy = (@skill_info[skill]['accuracy'] * @rank_effect_accuracy[rank_diff]).to_i
-      if rand(100) > accuracy
-        printf "しかし %sの こうげきは はずれた\n", attacker['name']
-        return
-      end
-    end
-
     damage = calc_base_damage(attacker, target, skill)
     damage = calc_self_type_effect(damage, attacker, skill)
     damage, message = calc_target_type_effect(damage, skill, target)
@@ -345,6 +361,22 @@ class PokemonZukan
     printf "[%s ダメージ%d]\n", target['name'], damage
 
     return damage
+  end
+
+  def miss? (attacker, target, skill)
+    rank_diff = attacker['r_accuracy'] - target['r_evasion']
+    rank_diff = rank_diff > 6 ? 6 : rank_diff
+    rank_diff = rank_diff < -6 ? -6 : rank_diff
+
+    if @skill_info[skill]['accuracy'] != '-'
+      accuracy = (@skill_info[skill]['accuracy'] * @rank_effect_accuracy[rank_diff]).to_i
+      if rand(100) > accuracy
+        printf "しかし %sの こうげきは はずれた\n", attacker['name']
+        return true
+      end
+    end
+
+    return false
   end
 
   def status_proc(target, status, rank, p)
@@ -399,7 +431,35 @@ class PokemonZukan
     printf "[%s 反動ダメージ%d]", target['name'], recoil
   end
 
+  def state_proc (target, state, p)
+    if rand(100) > p
+      return
+    end
+
+    target['state'][state] = 1
+    printf "%s%s\n", target['name'], @state_message[state+'_START']
+  end
+
+  def pre_proc(target)
+    if target['state'].key?('PRZ')
+      if rand(100) > 25
+        printf "%s%s\n", target['name'], @state_message['PRZ_CONTINUE']
+        return true
+      end
+    end
+
+    return false
+  end
+
   def skill_proc (attacker, target, skill)
+    if pre_proc(attacker)
+      return
+    end
+
+    if miss?(attacker, target, skill)
+      return
+    end
+
     if @skill_info[skill]['power'] != '-'
       damage = damage_proc(attacker, target, skill)  
     end
@@ -410,115 +470,116 @@ class PokemonZukan
       return
     end
 
-    p = @skill_info[skill]['status_effect_p']
+    status_effect_p = @skill_info[skill]['status_effect_p']
+    state_effect_p = @skill_info[skill]['state_effect_p']
 
     case @skill_info[skill]['effect_code']
       when '0000'
 
       when '000A', '008B'
-      status_proc(attacker, 'attack',   1, p)
+      status_proc(attacker, 'attack',   1, status_effect_p)
       when '000B', '008A', '009C'
-      status_proc(attacker, 'defence',  1, p)
+      status_proc(attacker, 'defence',  1, status_effect_p)
       when '00AE'
-      status_proc(attacker, 'sp_def',   1, p)
+      status_proc(attacker, 'sp_def',   1, status_effect_p)
       when '0114', '0127'
-      status_proc(attacker, 'speed',    1, p)
+      status_proc(attacker, 'speed',    1, status_effect_p)
       when '0010'
-      status_proc(attacker, 'evasion',  1, p)
+      status_proc(attacker, 'evasion',  1, status_effect_p)
 
       when '0032', '0076'
-      status_proc(attacker, 'attack',   2, p)
+      status_proc(attacker, 'attack',   2, status_effect_p)
       when '0033'
-      status_proc(attacker, 'defence',  2, p)
+      status_proc(attacker, 'defence',  2, status_effect_p)
       when '0034', '011C'
-      status_proc(attacker, 'speed',    2, p)
+      status_proc(attacker, 'speed',    2, status_effect_p)
       when '0035'
-      status_proc(attacker, 'sp_atk',   2, p)
+      status_proc(attacker, 'sp_atk',   2, status_effect_p)
       when '0036'
-      status_proc(attacker, 'sp_def',   2, p)
+      status_proc(attacker, 'sp_def',   2, status_effect_p)
       when '006C'
-      status_proc(attacker, 'evasion',  2, p)
+      status_proc(attacker, 'evasion',  2, status_effect_p)
 
       when '0148'
-      status_proc(attacker, 'defence',  3, p)
+      status_proc(attacker, 'defence',  3, status_effect_p)
       when '0141'
-      status_proc(attacker, 'sp_atk',   3, p)
+      status_proc(attacker, 'sp_atk',   3, status_effect_p)
 
       when '00CE'
-      status_proc(attacker, 'defence',  1, p)
-      status_proc(attacker, 'sp_def',   1, p)
+      status_proc(attacker, 'defence',  1, status_effect_p)
+      status_proc(attacker, 'sp_def',   1, status_effect_p)
       when '00D0'
-      status_proc(attacker, 'attack',   1, p)
-      status_proc(attacker, 'defence',  1, p)
+      status_proc(attacker, 'attack',   1, status_effect_p)
+      status_proc(attacker, 'defence',  1, status_effect_p)
       when '013C', '0147'
-      status_proc(attacker, 'attack',   1, p)
-      status_proc(attacker, 'sp_atk',   1, p)
+      status_proc(attacker, 'attack',   1, status_effect_p)
+      status_proc(attacker, 'sp_atk',   1, status_effect_p)
       when '00D3'
-      status_proc(attacker, 'sp_atk',   1, p)
-      status_proc(attacker, 'sp_def',   1, p)
+      status_proc(attacker, 'sp_atk',   1, status_effect_p)
+      status_proc(attacker, 'sp_def',   1, status_effect_p)
       when '00D4'
-      status_proc(attacker, 'attack',   1, p)
-      status_proc(attacker, 'speed',    1, p)
+      status_proc(attacker, 'attack',   1, status_effect_p)
+      status_proc(attacker, 'speed',    1, status_effect_p)
       when '0115'
-      status_proc(attacker, 'attack',   1, p)
-      status_proc(attacker, 'accuracy', 1, p)
+      status_proc(attacker, 'attack',   1, status_effect_p)
+      status_proc(attacker, 'accuracy', 1, status_effect_p)
       when '0138'
-      status_proc(attacker, 'attack',   1, p)
-      status_proc(attacker, 'speed',    2, p)
+      status_proc(attacker, 'attack',   1, status_effect_p)
+      status_proc(attacker, 'speed',    2, status_effect_p)
       when '0122'
-      status_proc(attacker, 'sp_atk',   1, p)
-      status_proc(attacker, 'sp_def',   1, p)
-      status_proc(attacker, 'speed',    1, p)
+      status_proc(attacker, 'sp_atk',   1, status_effect_p)
+      status_proc(attacker, 'sp_def',   1, status_effect_p)
+      status_proc(attacker, 'speed',    1, status_effect_p)
       when '0142'
-      status_proc(attacker, 'attack',   1, p)
-      status_proc(attacker, 'defence',  1, p)
-      status_proc(attacker, 'accuracy', 1, p)
+      status_proc(attacker, 'attack',   1, status_effect_p)
+      status_proc(attacker, 'defence',  1, status_effect_p)
+      status_proc(attacker, 'accuracy', 1, status_effect_p)
 
       when '0012', '0044'
-      status_proc(target, 'attack',   -1, p)
+      status_proc(target, 'attack',   -1, status_effect_p)
       when '0013', '0045'
-      status_proc(target, 'defence',  -1, p)
+      status_proc(target, 'defence',  -1, status_effect_p)
       when '0014', '0046', '00DA', '014A'
-      status_proc(target, 'speed',    -1, p)
+      status_proc(target, 'speed',    -1, status_effect_p)
       when '0047'
-      status_proc(target, 'sp_atk',   -1, p)
+      status_proc(target, 'sp_atk',   -1, status_effect_p)
       when '0048'
-      status_proc(target, 'sp_def',   -1, p)
+      status_proc(target, 'sp_def',   -1, status_effect_p)
       when '0017'
-      status_proc(target, 'accuracy', -1, p)
+      status_proc(target, 'accuracy', -1, status_effect_p)
       when '0018', '0049'
-      status_proc(target, 'evasion',  -1, p)
+      status_proc(target, 'evasion',  -1, status_effect_p)
 
       when '003A'
-      status_proc(target, 'attack',  -2, p)
+      status_proc(target, 'attack',  -2, status_effect_p)
       when '003B'
-      status_proc(target, 'defence', -2, p)
+      status_proc(target, 'defence', -2, status_effect_p)
       when '003C'
-      status_proc(target, 'speed',   -2, p)
+      status_proc(target, 'speed',   -2, status_effect_p)
       when '003E', '010F', '0128'
-      status_proc(target, 'sp_def',  -2, p)
+      status_proc(target, 'sp_def',  -2, status_effect_p)
 
       when '00CD'
-      status_proc(target, 'attack',  -1, p)
-      status_proc(target, 'defence', -1, p)
+      status_proc(target, 'attack',  -1, status_effect_p)
+      status_proc(target, 'defence', -1, status_effect_p)
 
       when '00CC'
-      status_proc(attacker, 'sp_atk',  -2, p)
+      status_proc(attacker, 'sp_atk',  -2, status_effect_p)
     when '00B6'
-      status_proc(attacker, 'attack',  -1, p)
-      status_proc(attacker, 'defence', -1, p)
+      status_proc(attacker, 'attack',  -1, status_effect_p)
+      status_proc(attacker, 'defence', -1, status_effect_p)
       when '00E5'
-      status_proc(attacker, 'defence', -1, p)
-      status_proc(attacker, 'sp_def',  -1, p)
+      status_proc(attacker, 'defence', -1, status_effect_p)
+      status_proc(attacker, 'sp_def',  -1, status_effect_p)
       when '014E'
-      status_proc(attacker, 'defence', -1, p)
-      status_proc(attacker, 'sp_def',  -1, p)
-      status_proc(attacker, 'speed',   -1, p)
+      status_proc(attacker, 'defence', -1, status_effect_p)
+      status_proc(attacker, 'sp_def',  -1, status_effect_p)
+      status_proc(attacker, 'speed',   -1, status_effect_p)
 
       when '009C'
-      status_proc(target, 'attack', 1, p)
+      status_proc(target, 'attack', 1, status_effect_p)
       when '008C'
-      if rand(100) > p
+      if rand(100) > status_effect_p
         status_proc(attacker, 'attack',  1, nil)
         status_proc(attacker, 'defence', 1, nil)
         status_proc(attacker, 'sp_atk',  1, nil)
@@ -537,6 +598,10 @@ class PokemonZukan
       recoil_proc(attacker, damage, 0.25)
       when '00C6', '00FD', '0106', '010D'
       recoil_proc(attacker, damage, 1.0/3)
+
+
+      when '0006', '0043', '0098', '0106' # その他 でんじは かみなり ボルテッカー
+      state_proc(target, 'PRZ', state_effect_p)
     end
 
     puts
