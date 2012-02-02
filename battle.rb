@@ -2,6 +2,13 @@
 
 require './pokemon-zukan.rb'
 
+if ARGV.size != 2
+  abort(sprintf "usage : %s your_pokemon enemy_pokemon\n", $0)
+end
+
+pokemon_name = ARGV.shift
+enemy_name = ARGV.shift
+
 $zukan = PokemonZukan.new
 
 def act (pokemon, enemy, decision)
@@ -41,17 +48,10 @@ def gameover?(pokemon, enemy)
     return false
   end
 end
-# pokemon = $zukan.pokemon('フシギダネ')
-# enemy = $zukan.pokemon('ヒトカゲ')
 
-# pokemon =  $zukan.pokemon('リザードン', 100)
-pokemon =  $zukan.pokemon('ドクケイル', 100)
-# pokemon =  $zukan.pokemon('フシギバナ', 50, [
-#                                              'はっぱカッター',
-#                                              'はなびらのまい',
-#                                              'こうごうせい',
-#                                              'じしん'])
-# pokemon = $zukan.pokemon('アルセウス', 100)
+pokemon =  $zukan.pokemon(pokemon_name, 100)
+enemy =  $zukan.pokemon(enemy_name, 100)
+
 # pokemon = $zukan.pokemon('ミュウツー', 100, [
 #                                              'サイコブレイク',
 #                                              'はどうだん',
@@ -59,13 +59,7 @@ pokemon =  $zukan.pokemon('ドクケイル', 100)
 #                                              # 'シャドーボール',
 #                                              'めいそう',
 #                                             ])
-# pokemon = $zukan.pokemon('レックウザ', 75)
-# pokemon =  $zukan.pokemon('リザードン', 100)
-# enemy =  $zukan.pokemon('フシギバナ', 100)
-enemy =  $zukan.pokemon('カメックス', 70)
-# enemy =  $zukan.pokemon('フシギバナ', 100)
 # enemy =  $zukan.pokemon('リザードン', 100, [0,0,0,0,0,0], [0,0,0,0,0,0])
-# enemy =  $zukan.pokemon('ミュウツー', 100)
 
 loop do
   printf "%s Lv%d\n", pokemon['name'], pokemon['level']
