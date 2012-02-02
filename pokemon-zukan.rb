@@ -5,7 +5,12 @@ class PokemonZukan
 
   def initialize
     @state_str = {
-      'PRZ' => 'まひ',
+      'BRN' => 'やけど',
+      'FRZ' => 'こおり',
+      'PAR' => 'まひ',
+      'PSN' => 'どく',
+      'PSN2' => 'もうどく',
+      'SLP' => 'ねむり',
     }
 
     @status_str = {
@@ -58,13 +63,19 @@ class PokemonZukan
     }
 
     @state_message = { 
+      'PSN_START'    => 'は どくを うけた',
+      'PSN_CONTINUE' => 'は どくによる ダメージをうけた',
+
+      'BRN_START'    => 'は やけどを おった',
+      'BRN_CONTINUE' => 'は やけどによる ダメージをうけた',
+
       'FRZ_START'    => 'は こおりついた',
       'FRZ_CONTINUE' => 'は こおってしまって うごけない',
       'FRZ_END'      => 'の こおりが とけた',
 
-      'PRZ_START'    => 'は まひして わざが でにくくなった',
-      'PRZ_CONTINUE' => 'は からだが しびれて うごけない',
-      'PRZ_END'      => 'の しびれが とれた',
+      'PAR_START'    => 'は まひして わざが でにくくなった',
+      'PAR_CONTINUE' => 'は からだが しびれて うごけない',
+      'PAR_END'      => 'の しびれが とれた',
     }
 
     @type_effect = Hash.new
@@ -249,7 +260,7 @@ class PokemonZukan
   def calc_speed (pokemon)
     speed = (pokemon['speed'] * @rank_effect[pokemon['r_speed']]).to_i
 
-    if pokemon['state'].key?('PRZ')
+    if pokemon['state'].key?('PAR')
       speed = (speed*0.25).to_i
     end
 
@@ -432,18 +443,32 @@ class PokemonZukan
   end
 
   def state_proc (target, state, p)
-    if rand(100) > p
-      return
+    puts "check " + state + ' ' + p.to_s
+    if !p.nil?
+      if rand(100) > p
+        return
+      end
     end
 
     target['state'][state] = 1
     printf "%s%s\n", target['name'], @state_message[state+'_START']
   end
 
-  def pre_proc(target)
-    if target['state'].key?('PRZ')
+  def pre_proc (target)
+    if target['state'].key?('FRZ')
       if rand(100) > 25
-        printf "%s%s\n", target['name'], @state_message['PRZ_CONTINUE']
+        printf "%s%s\n", target['name'], @state_message['FRZ_END']
+        target['state'].delete('FRZ')
+        return false
+      else
+        printf "%s%s\n", target['name'], @state_message['FRZ_CONTINUE']
+      end
+      return true
+    end
+
+    if target['state'].key?('PAR')
+      if rand(100) > 25
+        printf "%s%s\n", target['name'], @state_message['PAR_CONTINUE']
         return true
       end
     end
@@ -451,11 +476,23 @@ class PokemonZukan
     return false
   end
 
-  def skill_proc (attacker, target, skill)
-    if pre_proc(attacker)
-      return
+  def post_proc (target)
+    if target['state'].key?('PSN')
+      damage = (target['max_hp']/8).to_i
+      printf "%s%s\n", target['name'], @state_message['PSN_CONTINUE']
+      printf "[%s ダメージ%d]\n", target['name'], damage
+      target['hp'] -= damage
     end
 
+    if target['state'].key?('BRN')
+      damage = (target['max_hp']/8).to_i
+      printf "%s%s\n", target['name'], @state_message['BRN_CONTINUE']
+      printf "[%s ダメージ%d]\n", target['name'], damage
+      target['hp'] -= damage
+    end
+  end
+
+  def skill_proc (attacker, target, skill)
     if miss?(attacker, target, skill)
       return
     end
@@ -600,8 +637,14 @@ class PokemonZukan
       recoil_proc(attacker, damage, 1.0/3)
 
 
-      when '0006', '0043', '0098', '0106' # その他 でんじは かみなり ボルテッカー
-      state_proc(target, 'PRZ', state_effect_p)
+      when '0002', '0042', '00D1' # その他 どくのこな/どくガス ポイズンテール/クロスポイズン
+      state_proc(target, 'PSN', state_effect_p)
+      when '0004', '007D', '00C8', '00FD' # その他 かえんぐるま/せいなるほのお ブレイズキック フレアドライブ
+      state_proc(target, 'BRN', state_effect_p)
+      when '0005', '0104' # その他 ふぶき
+      state_proc(target, 'FRZ', state_effect_p)
+      when '0006', '0043', '0098', '0106' # その他 しびれごな/へびにらみ/でんじは かみなり ボルテッカー
+      state_proc(target, 'PAR', state_effect_p)
     end
 
     puts

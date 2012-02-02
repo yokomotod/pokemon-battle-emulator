@@ -6,16 +6,26 @@ $zukan = PokemonZukan.new
 
 def act (pokemon, enemy, decision)
   skill = pokemon['skill'][decision]['name']
+  if $zukan.pre_proc(pokemon)
+    return
+  end
   printf "%sの %s！\n", pokemon['name'], skill
   $zukan.skill_proc(pokemon, enemy, skill)
   pokemon['skill'][decision]['pp'] -= 1
+
+  $zukan.post_proc(pokemon)
 end
 
 def act_enemy (enemy, pokemon, enemy_decision)
   skill = enemy['skill'][enemy_decision]['name']
+  if $zukan.pre_proc(enemy)
+    return
+  end
   printf "あいての %sの %s！\n", enemy['name'], skill
   $zukan.skill_proc(enemy, pokemon, skill)
   enemy['skill'][enemy_decision]['pp'] -= 1
+
+  $zukan.post_proc(enemy)
 end
 
 def gameover?(pokemon, enemy)
@@ -34,8 +44,8 @@ end
 # pokemon = $zukan.pokemon('フシギダネ')
 # enemy = $zukan.pokemon('ヒトカゲ')
 
-pokemon =  $zukan.pokemon('レアコイル', 100)
-# pokemon =  $zukan.pokemon('フシギバナ', 200)
+# pokemon =  $zukan.pokemon('リザードン', 100)
+pokemon =  $zukan.pokemon('フシギバナ', 100)
 # pokemon =  $zukan.pokemon('フシギバナ', 50, [
 #                                              'はっぱカッター',
 #                                              'はなびらのまい',
@@ -52,8 +62,8 @@ pokemon =  $zukan.pokemon('レアコイル', 100)
 # pokemon = $zukan.pokemon('レックウザ', 75)
 # pokemon =  $zukan.pokemon('リザードン', 100)
 # enemy =  $zukan.pokemon('フシギバナ', 100)
-# enemy =  $zukan.pokemon('カメックス', 100)
-enemy =  $zukan.pokemon('フシギバナ', 100)
+enemy =  $zukan.pokemon('カメックス', 100)
+# enemy =  $zukan.pokemon('フシギバナ', 100)
 # enemy =  $zukan.pokemon('リザードン', 100, [0,0,0,0,0,0], [0,0,0,0,0,0])
 # enemy =  $zukan.pokemon('ミュウツー', 100)
 
