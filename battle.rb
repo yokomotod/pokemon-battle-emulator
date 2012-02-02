@@ -14,25 +14,23 @@ $zukan = PokemonZukan.new
 def act (pokemon, enemy, decision)
   skill = pokemon['skill'][decision]['name']
   if $zukan.pre_proc(pokemon)
-    return
+    printf "%sの %s！\n", pokemon['name'], skill
+    $zukan.skill_proc(pokemon, enemy, skill)
+    pokemon['skill'][decision]['pp'] -= 1
   end
-  printf "%sの %s！\n", pokemon['name'], skill
-  $zukan.skill_proc(pokemon, enemy, skill)
-  pokemon['skill'][decision]['pp'] -= 1
 
-  $zukan.post_proc(pokemon)
+  $zukan.post_proc(pokemon, enemy)
 end
 
 def act_enemy (enemy, pokemon, enemy_decision)
   skill = enemy['skill'][enemy_decision]['name']
   if $zukan.pre_proc(enemy)
-    return
+    printf "あいての %sの %s！\n", enemy['name'], skill
+    $zukan.skill_proc(enemy, pokemon, skill)
+    enemy['skill'][enemy_decision]['pp'] -= 1
   end
-  printf "あいての %sの %s！\n", enemy['name'], skill
-  $zukan.skill_proc(enemy, pokemon, skill)
-  enemy['skill'][enemy_decision]['pp'] -= 1
 
-  $zukan.post_proc(enemy)
+  $zukan.post_proc(enemy, pokemon)
 end
 
 def gameover?(pokemon, enemy)
@@ -66,11 +64,17 @@ loop do
   if pokemon['state'].size != 0
     printf " ### %s ###\n", pokemon['state'].keys.map{|x| $zukan.state_str[x] }.join(' ')
   end
+  if pokemon['special_state'].size != 0
+    printf " ### %s ###\n", pokemon['state_special'].keys.map{|x| $zukan.state_str[x] }.join(' ')
+  end
   printf " HP:%d／%d\n", pokemon['hp'], pokemon['max_hp']
 
   printf "%s Lv%d\n", enemy['name'], enemy['level']
   if enemy['state'].size != 0
     printf " ### %s ###\n", enemy['state'].keys.map{|x| $zukan.state_str[x] }.join(' ')
+  end
+  if enemy['special_state'].size != 0
+    printf " ### %s ###\n", enemy['special_state'].keys.map{|x| $zukan.state_str[x] }.join(' ')
   end
   printf " HP:%d／%d\n", enemy['hp'], enemy['max_hp']
 

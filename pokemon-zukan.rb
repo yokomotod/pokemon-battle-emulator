@@ -11,6 +11,21 @@ class PokemonZukan
       'BRN' => 'やけど',
       'FRZ' => 'こおり',
       'PAR' => 'まひ',
+
+      'CONFUSE'   => 'こんらん',
+      'CURSE'     => 'のろい',
+      'ENCORE'    => 'アンコール',
+      'FLINCH'    => 'ひるみ',
+      'IDENTIFY'  => 'みやぶる',
+      'MEROMERO'  => 'メロメロ',
+      'SEED'      => 'やどりぎのタネ',
+      'EYE'       => 'こころのめ',
+      'LOCKON'    => 'ロックオン',
+      'NIGHTMARE' => 'あくむ',
+      'TRAPPED'   => 'しめつける',
+      'SONG'      => 'ほろびのうた',
+      'TAUNT'     => 'ちょうはつ',
+      'TORMENT'   => 'いちゃもん',
     }
 
     @status_str = {
@@ -245,6 +260,7 @@ class PokemonZukan
     pokemon['r_accuracy'] = pokemon['r_evasion'] = pokemon['r_critical'] = 0
 
     pokemon['state'] = Hash.new
+    pokemon['special_state'] = Hash.new
 
     return pokemon
   end
@@ -450,7 +466,7 @@ class PokemonZukan
 
   def state_proc (target, state, p)
 
-    if target['state'].key?('SLP') || target['state'].key?('PSN') || target['state'].key?('PSN2') || target['state'].key?('BRN') || target['state'].key?('FRZ') || target['state'].key?('PAR')
+    if target['state'].size != 0
       puts 'しかし うまく きまらなかった'
       return
     end
@@ -471,16 +487,32 @@ class PokemonZukan
     printf "%s%s\n", target['name'], @state_message[state+'_START']
   end
 
+  def special_state_proc (target, special_state, p)
+    if target['special_state'].key?(special_state)
+      puts 'しかし うまく きまらなかった'
+      return
+    end
+
+    if !p.nil?
+      if rand(100) > p
+        puts 'しかし うまく きまらなかった'
+        return
+      end
+    end
+
+    target['special_state'][special_state] = 1
+  end
+
   def pre_proc (target)
     if target['state'].key?('SLP')
       target['state']['SLP'] -= 1
       if target['state']['SLP'] == 0
         printf "%s%s\n", target['name'], @state_message['SLP_END']
         target['state'].delete('SLP')
-        return false
+        return true
       else
         printf "%s%s\n", target['name'], @state_message['SLP_CONTINUE']
-        return true
+        return false
       end
     end
 
@@ -488,48 +520,62 @@ class PokemonZukan
       if rand(100) > 25
         printf "%s%s\n", target['name'], @state_message['FRZ_END']
         target['state'].delete('FRZ')
-        return false
+        return true
       else
         printf "%s%s\n", target['name'], @state_message['FRZ_CONTINUE']
-        return true
+        return false
       end
     end
 
     if target['state'].key?('PAR')
       if rand(100) > 25
         printf "%s%s\n", target['name'], @state_message['PAR_CONTINUE']
-        return true
+        return false
       end
     end
 
-    return false
+    return true
   end
 
-  def post_proc (target)
-    if target['state'].key?('PSN')
-      damage = (target['max_hp']/8).to_i
-      printf "%s%s\n", target['name'], @state_message['PSN_CONTINUE']
-      printf "[%s ダメージ%d]\n", target['name'], damage
-      target['hp'] -= damage
+  def post_proc (pokemon, enemy)
+    if pokemon['state'].key?('PSN')
+      damage = (pokemon['max_hp']/8).to_i
+      printf "%s%s\n", pokemon['name'], @state_message['PSN_CONTINUE']
+      printf "[%s ダメージ%d]\n", pokemon['name'], damage
+      pokemon['hp'] -= damage
     end
 
-    if target['state'].key?('PSN2')
-      damage = (target['state']['PSN2'] * target['max_hp'] / 16).to_i
-      printf "%s%s\n", target['name'], @state_message['PSN_CONTINUE']
-      printf "[%s ダメージ%d]\n", target['name'], damage
-      target['hp'] -= damage
+    if pokemon['state'].key?('PSN2')
+      damage = (pokemon['state']['PSN2'] * pokemon['max_hp'] / 16).to_i
+      printf "%s%s\n", pokemon['name'], @state_message['PSN_CONTINUE']
+      printf "[%s ダメージ%d]\n", pokemon['name'], damage
+      pokemon['hp'] -= damage
 
-      target['state']['PSN2'] += 1
-      if target['state']['PSN2'] == 16
-        target['state']['PSN2'] = 15
+      pokemon['state']['PSN2'] += 1
+      if pokemon['state']['PSN2'] == 16
+        pokemon['state']['PSN2'] = 15
       end
     end
 
-    if target['state'].key?('BRN')
-      damage = (target['max_hp']/8).to_i
-      printf "%s%s\n", target['name'], @state_message['BRN_CONTINUE']
-      printf "[%s ダメージ%d]\n", target['name'], damage
-      target['hp'] -= damage
+    if pokemon['state'].key?('BRN')
+      damage = (pokemon['max_hp']/8).to_i
+      printf "%s%s\n", pokemon['name'], @state_message['BRN_CONTINUE']
+      printf "[%s ダメージ%d]\n", pokemon['name'], damage
+      pokemon['hp'] -= damage
+    end
+
+    if pokemon['special_state'].key?('SEED')
+      damage = (pokemon['max_hp']/8).to_i
+      recover = damage
+      if enemy['hp'] + recover > enemy['max_hp']
+        recover = enemy['max_hp'] - enemy['hp']
+      end
+
+      printf "[%s やどりぎのタネによるダメージ%d]\n", pokemon['name'], damage
+      printf "[%s やどりぎのタネによる回復%d]\n", enemy['name'], recover
+      pokemon['hp'] -= damage
+      enemy['hp'] += recover
+      
     end
   end
 
@@ -689,6 +735,9 @@ class PokemonZukan
       state_proc(target, 'FRZ', state_effect_p)
       when '0006', '0043', '0098', '0106' # その他 しびれごな/へびにらみ/でんじは かみなり ボルテッカー
       state_proc(target, 'PAR', state_effect_p)
+
+      when '0054' # やどりぎのタネ
+      special_state_proc(target, 'SEED', state_effect_p)
     end
 
     puts
