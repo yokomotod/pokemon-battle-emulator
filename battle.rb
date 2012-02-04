@@ -84,19 +84,27 @@ loop do
 
   pokemon['skill'].each_with_index do |skill, i|
     printf "%2d : %s PP %d／%d わざタイプ／%s \n",
-    i, skill['name'], skill['pp'], skill['max_pp'], skill['type']
+    i+1, skill['name'], skill['pp'], skill['max_pp'], skill['type']
   end
 
-  print '> '
   decision = nil
   loop do
-    decision = gets.to_i
+    print '> '
+    decision = gets
 
-    if pokemon['skill'][decision]['pp'] > 0
-      break
-    else
+    if decision !~ /^\d+$/
+      next
+    end
+
+    decision = decision.to_i - 1
+
+    if decision < 0 || decision >= pokemon['skill'].size
+      next
+    elsif pokemon['skill'][decision]['pp'] <= 0
       puts 'PPが たりない'
-      print '> '
+      next
+    else
+      break
     end
   end
   
