@@ -23,6 +23,37 @@ def show_status (pokemon)
   printf " こうげき:%3d ぼうぎょ:%3d とくこう:%3d とくぼう:%3d すばやさ:%3d\n", pokemon['attack'], pokemon['defence'], pokemon['sp_atk'], pokemon['sp_def'], pokemon['speed']
 end
 
+def get_input (pokemon)
+  printf "%sは どうする？\n", pokemon['name']
+
+  pokemon['skill'].each_with_index do |skill, i|
+    printf "%2d : %s PP %d／%d わざタイプ／%s \n",
+    i+1, skill['name'], skill['pp'], skill['max_pp'], skill['type']
+  end
+
+  loop do
+    print '> '
+    decision = gets
+
+    if decision !~ /^\d+$/
+      next
+    end
+
+    decision = decision.to_i - 1
+
+    if decision < 0 || decision >= pokemon['skill'].size
+      next
+    end
+
+    if pokemon['skill'][decision]['pp'] <= 0
+      puts 'PPが たりない'
+      next
+    end
+
+    return decision
+  end
+end
+
 def act (pokemon, enemy, decision)
   skill = pokemon['skill'][decision]['name']
   if $zukan.pre_proc(pokemon)
@@ -80,33 +111,7 @@ loop do
 
   sleep(1)
 
-  printf "%sは どうする？\n", pokemon['name']
-
-  pokemon['skill'].each_with_index do |skill, i|
-    printf "%2d : %s PP %d／%d わざタイプ／%s \n",
-    i+1, skill['name'], skill['pp'], skill['max_pp'], skill['type']
-  end
-
-  decision = nil
-  loop do
-    print '> '
-    decision = gets
-
-    if decision !~ /^\d+$/
-      next
-    end
-
-    decision = decision.to_i - 1
-
-    if decision < 0 || decision >= pokemon['skill'].size
-      next
-    elsif pokemon['skill'][decision]['pp'] <= 0
-      puts 'PPが たりない'
-      next
-    else
-      break
-    end
-  end
+  decision = get_input(pokemon)
   
   puts
 
