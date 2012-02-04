@@ -85,7 +85,7 @@ loop do
   printf "%sは どうする？\n", pokemon['name']
 
   pokemon['skill'].each_with_index do |skill, i|
-    printf "%d : %s PP %d／%d わざタイプ／%s \n",
+    printf "%2d : %s PP %d／%d わざタイプ／%s \n",
     i, skill['name'], skill['pp'], skill['max_pp'], skill['type']
   end
 

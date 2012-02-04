@@ -388,6 +388,7 @@ class PokemonZukan
     damage = calc_random_effect(damage)
 
     target['hp'] -= damage
+    target['prev_damage'] = damage
     if !message.nil?
       puts message
     end
@@ -585,7 +586,14 @@ class PokemonZukan
     end
 
     if @skill_info[skill]['power'] != '-'
-      damage = damage_proc(attacker, target, skill)  
+      case @skill_info[skill]['effect_code']
+      when '0090' # ミラーコート
+        damage = 2 * attacker['prev_damage']
+        target['hp'] -= damage
+        printf "[%s ダメージ%d]\n", target['name'], damage
+      else
+        damage = damage_proc(attacker, target, skill)  
+      end
     end
 
     sleep(1)
@@ -738,6 +746,8 @@ class PokemonZukan
 
       when '0054' # やどりぎのタネ
       special_state_proc(target, 'SEED', state_effect_p)
+
+
     end
 
     puts
