@@ -90,7 +90,18 @@ loop do
   end
 
   print '> '
-  decision = gets.to_i
+  decision = nil
+  loop do
+    decision = gets.to_i
+
+    if pokemon['skill'][decision]['pp'] > 0
+      break
+    else
+      puts 'PPが たりない'
+      print '> '
+    end
+  end
+  
   puts
 
   enemy_decision = $zukan.make_decision(enemy, pokemon)
