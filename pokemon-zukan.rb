@@ -765,4 +765,113 @@ class PokemonZukan
     end
   end
 
+  def show_status (pokemon)
+    printf "%s Lv%d %s\n", pokemon['name'], pokemon['level'], pokemon['type'].join('／')
+    if pokemon['state'].size != 0
+      printf " ### %s ###\n", pokemon['state'].keys.map{|x| $zukan.state_str[x] }.join(' ')
+    end
+    if pokemon['special_state'].size != 0
+      printf " ### %s ###\n", pokemon['state_special'].keys.map{|x| $zukan.state_str[x] }.join(' ')
+    end
+    printf " HP:%d／%d\n", pokemon['hp'], pokemon['max_hp']
+    printf " こうげき:%3d ぼうぎょ:%3d とくこう:%3d とくぼう:%3d すばやさ:%3d\n",
+    pokemon['attack'], pokemon['defence'], pokemon['sp_atk'], pokemon['sp_def'], pokemon['speed']
+  end
+
+  def get_input (pokemon)
+    printf "%sは どうする？\n", pokemon['name']
+
+    pokemon['skill'].each_with_index do |skill, i|
+      printf "%2d : %s PP %d／%d わざタイプ／%s \n",
+      i+1, skill['name'], skill['pp'], skill['max_pp'], skill['type']
+    end
+
+    loop do
+      print '> '
+      decision = gets
+
+      if decision !~ /^\d+$/
+        next
+      end
+
+      decision = decision.to_i - 1
+
+      if decision < 0 || decision >= pokemon['skill'].size
+        next
+      end
+
+      if pokemon['skill'][decision]['pp'] <= 0
+        puts 'PPが たりない'
+        next
+      end
+
+      return decision
+    end
+  end
+
+  def act (pokemon, enemy, decision)
+    skill = pokemon['skill'][decision]['name']
+    if $zukan.pre_proc(pokemon)
+      if pokemon['player?']
+        printf "%sの %s！\n", pokemon['name'], skill
+      else
+        printf "あいての %sの %s！\n", pokemon['name'], skill
+      end
+      $zukan.skill_proc(pokemon, enemy, skill)
+      pokemon['skill'][decision]['pp'] -= 1
+    end
+
+    $zukan.post_proc(pokemon, enemy)
+  end
+
+  def gameover?(pokemon, enemy)
+    if pokemon['hp'] <= 0
+      puts '------------------------------'
+      printf "%s はたおれた！\n", pokemon['name']
+      return true
+    elsif enemy['hp'] <= 0
+      puts '------------------------------'
+      printf "あいての %sは たおれた！\n", enemy['name']
+      return true
+    else
+      return false
+    end
+  end
+
+  def battle (pokemon1, pokemon2)
+    loop do
+
+      show_status(pokemon1)
+      show_status(pokemon2)
+
+      puts
+
+      sleep(1)
+
+      pokemon1_decision = get_input(pokemon1)
+      
+      puts
+
+      pokemon2_decision = $zukan.make_decision(pokemon2, pokemon1)
+      
+      first, first_decision, second, second_decision =  $zukan.sort_by_speed(pokemon1, decision, pokemon2, pokemon2_decision)
+
+      act(first, second, first_decision)
+      if gameover?(pokemon1, pokemon2)
+        break
+      end
+      
+      puts
+
+      act(second, first, second_decision)
+      if gameover?(pokemon1, pokemon2)
+        break
+      end
+
+      puts
+
+      puts '------------------------------'
+
+    end
+  end
 end
