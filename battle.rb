@@ -11,6 +11,18 @@ enemy_name = ARGV.shift
 
 $zukan = PokemonZukan.new
 
+def show_status (pokemon)
+  printf "%s Lv%d %s\n", pokemon['name'], pokemon['level'], pokemon['type'].join('／')
+  if pokemon['state'].size != 0
+    printf " ### %s ###\n", pokemon['state'].keys.map{|x| $zukan.state_str[x] }.join(' ')
+  end
+  if pokemon['special_state'].size != 0
+    printf " ### %s ###\n", pokemon['state_special'].keys.map{|x| $zukan.state_str[x] }.join(' ')
+  end
+  printf " HP:%d／%d\n", pokemon['hp'], pokemon['max_hp']
+  printf " こうげき:%3d ぼうぎょ:%3d とくこう:%3d とくぼう:%3d すばやさ:%3d\n", pokemon['attack'], pokemon['defence'], pokemon['sp_atk'], pokemon['sp_def'], pokemon['speed']
+end
+
 def act (pokemon, enemy, decision)
   skill = pokemon['skill'][decision]['name']
   if $zukan.pre_proc(pokemon)
@@ -60,23 +72,9 @@ enemy =  $zukan.pokemon(enemy_name, 100)
 # enemy =  $zukan.pokemon('リザードン', 100, [0,0,0,0,0,0], [0,0,0,0,0,0])
 
 loop do
-  printf "%s Lv%d\n", pokemon['name'], pokemon['level']
-  if pokemon['state'].size != 0
-    printf " ### %s ###\n", pokemon['state'].keys.map{|x| $zukan.state_str[x] }.join(' ')
-  end
-  if pokemon['special_state'].size != 0
-    printf " ### %s ###\n", pokemon['state_special'].keys.map{|x| $zukan.state_str[x] }.join(' ')
-  end
-  printf " HP:%d／%d\n", pokemon['hp'], pokemon['max_hp']
 
-  printf "%s Lv%d\n", enemy['name'], enemy['level']
-  if enemy['state'].size != 0
-    printf " ### %s ###\n", enemy['state'].keys.map{|x| $zukan.state_str[x] }.join(' ')
-  end
-  if enemy['special_state'].size != 0
-    printf " ### %s ###\n", enemy['special_state'].keys.map{|x| $zukan.state_str[x] }.join(' ')
-  end
-  printf " HP:%d／%d\n", enemy['hp'], enemy['max_hp']
+  show_status(pokemon)
+  show_status(enemy)
 
   puts
 
