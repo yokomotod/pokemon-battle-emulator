@@ -289,29 +289,29 @@ class PokemonZukan
     return speed
   end
 
-  def advance? (pokemon, decision, enemy, enemy_decision)
+  def sort_by_speed (pokemon, decision, enemy, enemy_decision)
     priority = @skill_info[pokemon['skill'][decision]['name']]['priority']
     enemy_priority = @skill_info[enemy['skill'][enemy_decision]['name']]['priority']
 
     if priority > enemy_priority
-      return true
+      return pokemon, decision, enemy, enemy_decision
     elsif priority < enemy_priority
-      return false
+      return enemy, enemy_decision, pokemon, decision
     end
 
     speed = calc_speed(pokemon)
     enemy_speed = calc_speed(enemy)
 
     if speed > enemy_speed
-      return true
+      return pokemon, decision, enemy, enemy_decision
     elsif speed < enemy_speed
-      return false
+      return enemy, enemy_decision, pokemon, decision
     end
 
     if rand(100) > 50
-      return true
+      return pokemon, decision, enemy, enemy_decision
     else
-      return false
+      return enemy, enemy_decision, pokemon, decision
     end
   end
 

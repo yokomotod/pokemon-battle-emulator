@@ -57,7 +57,11 @@ end
 def act (pokemon, enemy, decision)
   skill = pokemon['skill'][decision]['name']
   if $zukan.pre_proc(pokemon)
-    printf "%sの %s！\n", pokemon['name'], skill
+    if pokemon['player?']
+      printf "%sの %s！\n", pokemon['name'], skill
+    else
+      printf "あいての %sの %s！\n", pokemon['name'], skill
+    end
     $zukan.skill_proc(pokemon, enemy, skill)
     pokemon['skill'][decision]['pp'] -= 1
   end
@@ -65,16 +69,16 @@ def act (pokemon, enemy, decision)
   $zukan.post_proc(pokemon, enemy)
 end
 
-def act_enemy (enemy, pokemon, enemy_decision)
-  skill = enemy['skill'][enemy_decision]['name']
-  if $zukan.pre_proc(enemy)
-    printf "あいての %sの %s！\n", enemy['name'], skill
-    $zukan.skill_proc(enemy, pokemon, skill)
-    enemy['skill'][enemy_decision]['pp'] -= 1
-  end
+# def act_enemy (enemy, pokemon, enemy_decision)
+#   skill = enemy['skill'][enemy_decision]['name']
+#   if $zukan.pre_proc(enemy)
+#     printf "あいての %sの %s！\n", enemy['name'], skill
+#     $zukan.skill_proc(enemy, pokemon, skill)
+#     enemy['skill'][enemy_decision]['pp'] -= 1
+#   end
 
-  $zukan.post_proc(enemy, pokemon)
-end
+#   $zukan.post_proc(enemy, pokemon)
+# end
 
 def gameover?(pokemon, enemy)
   if pokemon['hp'] <= 0
@@ -91,7 +95,10 @@ def gameover?(pokemon, enemy)
 end
 
 pokemon =  $zukan.pokemon(pokemon_name, 100)
+pokemon['player?'] = true
+
 enemy =  $zukan.pokemon(enemy_name, 100)
+enemy['player?'] = false
 
 # pokemon = $zukan.pokemon('ミュウツー', 100, [
 #                                              'サイコブレイク',
@@ -117,35 +124,22 @@ loop do
 
   enemy_decision = $zukan.make_decision(enemy, pokemon)
 
-  if $zukan.advance?(pokemon, decision, enemy, enemy_decision)
-    act(pokemon, enemy, decision)
-    if gameover?(pokemon, enemy)
-      break
-    end
-    
-    puts
+  
+  first, first_decision, second, second_decision =  $zukan.sort_by_speed(pokemon, decision, enemy, enemy_decision)
 
-    act_enemy(enemy, pokemon, enemy_decision)
-    if gameover?(pokemon, enemy)
-      break
-    end
-
-    puts
-  else
-    act_enemy(enemy, pokemon, enemy_decision)
-    if gameover?(pokemon, enemy)
-      break
-    end
-
-    puts
-
-    act(pokemon, enemy, decision)
-    if gameover?(pokemon, enemy)
-      break
-    end
-
-    puts
+  act(first, second, first_decision)
+  if gameover?(pokemon, enemy)
+    break
   end
+    
+  puts
+
+  act(second, first, second_decision)
+  if gameover?(pokemon, enemy)
+    break
+  end
+
+  puts
 
   puts '------------------------------'
 
