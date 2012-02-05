@@ -854,7 +854,7 @@ class PokemonZukan
 
       pokemon2_decision = $zukan.make_decision(pokemon2, pokemon1)
       
-      first, first_decision, second, second_decision =  $zukan.sort_by_speed(pokemon1, decision, pokemon2, pokemon2_decision)
+      first, first_decision, second, second_decision =  $zukan.sort_by_speed(pokemon1, pokemon1_decision, pokemon2, pokemon2_decision)
 
       act(first, second, first_decision)
       if gameover?(pokemon1, pokemon2)
