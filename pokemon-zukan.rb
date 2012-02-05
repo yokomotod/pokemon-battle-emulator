@@ -771,7 +771,7 @@ class PokemonZukan
       printf " ### %s ###\n", pokemon['state'].keys.map{|x| $zukan.state_str[x] }.join(' ')
     end
     if pokemon['special_state'].size != 0
-      printf " ### %s ###\n", pokemon['state_special'].keys.map{|x| $zukan.state_str[x] }.join(' ')
+      printf " ### %s ###\n", pokemon['special_state'].keys.map{|x| $zukan.state_str[x] }.join(' ')
     end
     printf " HP:%d／%d\n", pokemon['hp'], pokemon['max_hp']
     printf " こうげき:%3d ぼうぎょ:%3d とくこう:%3d とくぼう:%3d すばやさ:%3d\n",
@@ -848,11 +848,12 @@ class PokemonZukan
 
       sleep(1)
 
-      pokemon1_decision = get_input(pokemon1)
+      pokemon1_decision = pokemon1['player?'] ? get_input(pokemon1) : $zukan.make_decision(pokemon1, pokemon2)
       
       puts
 
-      pokemon2_decision = $zukan.make_decision(pokemon2, pokemon1)
+      pokemon2_decision = pokemon2['player?'] ? get_input(pokemon2) : $zukan.make_decision(pokemon2, pokemon1)
+      # pokemon2_decision = $zukan.make_decision(pokemon2, pokemon1)
       
       first, first_decision, second, second_decision =  $zukan.sort_by_speed(pokemon1, pokemon1_decision, pokemon2, pokemon2_decision)
 
