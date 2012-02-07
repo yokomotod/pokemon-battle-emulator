@@ -265,6 +265,24 @@ class PokemonZukan
     return pokemon
   end
 
+  def pokemon_master (pokemon_list)
+
+    pokemons = Array.new
+
+    pokemon_list.each do |data|
+      name, level = data
+      pokemons.push(pokemon(name, level))
+    end
+
+    master = {
+      'pokemons' => pokemons,
+      'cur_number' => 0,
+      'cur_pokemon' => pokemons[0],
+    }
+    
+    return master
+  end
+
   def make_decision (pokemon, enemy)
     decision = nil
     best_action_score = -1
@@ -289,29 +307,59 @@ class PokemonZukan
     return speed
   end
 
-  def sort_by_speed (pokemon, decision, enemy, enemy_decision)
-    priority = @skill_info[pokemon['skill'][decision]['name']]['priority']
-    enemy_priority = @skill_info[enemy['skill'][enemy_decision]['name']]['priority']
-
-    if priority > enemy_priority
-      return pokemon, decision, enemy, enemy_decision
-    elsif priority < enemy_priority
-      return enemy, enemy_decision, pokemon, decision
-    end
-
-    speed = calc_speed(pokemon)
-    enemy_speed = calc_speed(enemy)
-
-    if speed > enemy_speed
-      return pokemon, decision, enemy, enemy_decision
-    elsif speed < enemy_speed
-      return enemy, enemy_decision, pokemon, decision
-    end
-
-    if rand(100) > 50
-      return pokemon, decision, enemy, enemy_decision
+  def sort_by_speed (master, decision, enemy, enemy_decision)
+    if decision == -1 && enemy_decision == -1
+      return []
+    elsif decision == -1
+      return [[enemy, enemy_decision, master]]
+    elsif enemy_decision == -1
+      return [[pokemon, decision, enemy]]
     else
-      return enemy, enemy_decision, pokemon, decision
+
+      pokemon = master['cur_pokemon']
+      enemy_pokemon = enemy['cur_pokemon']
+      priority = @skill_info[pokemon['skill'][decision]['name']]['priority']
+      enemy_priority = @skill_info[enemy_pokemon['skill'][enemy_decision]['name']]['priority']
+
+      if priority > enemy_priority
+        return [
+                [master, decision, enemy],
+                [enemy, enemy_decision, master],
+               ]
+      elsif priority < enemy_priority
+        return [
+                [enemy, enemy_decision, master],
+                [master, decision, enemy],
+               ]
+      end
+
+      speed = calc_speed(pokemon)
+      enemy_speed = calc_speed(enemy_pokemon)
+
+      if speed > enemy_speed
+        return [
+                [master, decision, enemy],
+                [enemy, enemy_decision, master],
+               ]
+      elsif speed < enemy_speed
+        return [
+                [enemy, enemy_decision, master],
+                [master, decision, enemy],
+               ]
+      end
+
+      if rand(100) > 50
+        return [
+                [master, decision, enemy],
+                [enemy, enemy_decision, master],
+               ]
+      else
+        return [
+                [enemy, enemy_decision, master],
+                [master, decision, enemy],
+               ]
+      end
+
     end
   end
 
@@ -778,68 +826,152 @@ class PokemonZukan
     pokemon['attack'], pokemon['defence'], pokemon['sp_atk'], pokemon['sp_def'], pokemon['speed']
   end
 
-  def get_input (pokemon)
-    printf "%sは どうする？\n", pokemon['name']
-
-    pokemon['skill'].each_with_index do |skill, i|
-      printf "%2d : %s PP %d／%d わざタイプ／%s \n",
-      i+1, skill['name'], skill['pp'], skill['max_pp'], skill['type']
-    end
-
+  def get_input (master)
     loop do
+      puts
+      puts 'どうする？'
+
+      puts '1 たたかう'
+      puts '2 ポケモン'
+
       print '> '
-      decision = gets
+      input = gets
 
-      if decision !~ /^\d+$/
+      if input !~ /^\d+$/
         next
       end
 
-      decision = decision.to_i - 1
+      input = input.to_i - 1
 
-      if decision < 0 || decision >= pokemon['skill'].size
+      if input != 0 && input != 1
         next
       end
 
-      if pokemon['skill'][decision]['pp'] <= 0
-        puts 'PPが たりない'
-        next
+      if input == 0
+
+        pokemon = master['cur_pokemon']
+
+        loop do
+          printf "%2d : もどる\n", 0
+          pokemon['skill'].each_with_index do |skill, i|
+            printf "%2d : %s PP %d／%d わざタイプ／%s \n",
+            i+1, skill['name'], skill['pp'], skill['max_pp'], skill['type']
+          end
+
+          print '> '
+          decision = gets
+
+          if decision !~ /^\d+$/
+            next
+          end
+
+          if decision == 0
+            next
+          end
+
+          decision = decision.to_i - 1
+          
+          if decision < 0 || decision >= pokemon['skill'].size
+            next
+          end
+
+          if pokemon['skill'][decision]['pp'] <= 0
+            puts 'PPが たりない'
+            next
+          end
+
+          return decision
+        end
       end
 
-      return decision
+      if input == 1
+
+        loop do
+          printf "%d : もどる\n", 0
+          master['pokemons'].each_with_index do |pokemon, i|
+            printf "%d : %s Lv%d HP%d／%d タイプ%s \n",
+            i+1, pokemon['name'], pokemon['level'], pokemon['hp'], pokemon['max_hp'], pokemon['type'].join('／')
+          end
+          print '> '
+          decision = gets
+
+          if decision !~ /^\d+$/
+            next
+          end
+
+          if decision == 0
+            next
+          end
+
+          decision = decision.to_i - 1
+
+          if decision < 0 || decision >= master['pokemons'].size
+            next
+          end
+
+          if decision == master['cur_number']
+            printf "%sは すでに でている\n", master['cur_pokemon']['name']
+            next
+          end
+
+          if master['pokemons'][decision]['hp'] <= 0
+            printf "%sは ひんしだ\n", master['pokemons'][decision]['name']
+            next
+          end
+
+          printf "もどれ！ %s\n", master['cur_pokemon']['name']
+
+          master['cur_number'] = decision
+          master['cur_pokemon'] = master['pokemons'][decision]
+
+          printf "いけ！ %s\n", master['cur_pokemon']['name']
+
+          return -1
+        end
+      end
     end
   end
 
-  def act (pokemon, enemy, decision)
+  def act (master, enemy, decision)
+    pokemon = master['cur_pokemon']
     skill = pokemon['skill'][decision]['name']
     if $zukan.pre_proc(pokemon)
-      if pokemon['player?']
+      if master['player?']
         printf "%sの %s！\n", pokemon['name'], skill
       else
         printf "あいての %sの %s！\n", pokemon['name'], skill
       end
-      $zukan.skill_proc(pokemon, enemy, skill)
+      $zukan.skill_proc(pokemon, enemy['cur_pokemon'], skill)
       pokemon['skill'][decision]['pp'] -= 1
     end
 
     $zukan.post_proc(pokemon, enemy)
   end
 
-  def gameover?(pokemon, enemy)
-    if pokemon['hp'] <= 0
-      puts '------------------------------'
-      printf "%s はたおれた！\n", pokemon['name']
-      return true
-    elsif enemy['hp'] <= 0
-      puts '------------------------------'
-      printf "あいての %sは たおれた！\n", enemy['name']
-      return true
-    else
+  def gameover?(master)
+    alive = false
+    master['pokemons'].each do |pokemon|
+      if pokemon['hp'] >= 0
+        alive = true
+        break
+      end
+    end
+
+    if alive
       return false
+    else
+      return true
     end
   end
 
-  def battle (pokemon1, pokemon2)
+  def battle (master1, master2)
     loop do
+
+      master1['skip?'] = false
+      master2['skip?'] = false
+
+      pokemon1 = master1['cur_pokemon']
+      pokemon2 = master2['cur_pokemon']
 
       show_status(pokemon1)
       show_status(pokemon2)
@@ -848,28 +980,55 @@ class PokemonZukan
 
       sleep(1)
 
-      pokemon1_decision = pokemon1['player?'] ? get_input(pokemon1) : $zukan.make_decision(pokemon1, pokemon2)
+      master1_decision = master1['player?'] ? get_input(master1) : $zukan.make_decision(pokemon1, pokemon2)
       
       puts
 
-      pokemon2_decision = pokemon2['player?'] ? get_input(pokemon2) : $zukan.make_decision(pokemon2, pokemon1)
-      # pokemon2_decision = $zukan.make_decision(pokemon2, pokemon1)
+      master2_decision = master2['player?'] ? get_input(master2) : $zukan.make_decision(pokemon2, pokemon1)
       
-      first, first_decision, second, second_decision =  $zukan.sort_by_speed(pokemon1, pokemon1_decision, pokemon2, pokemon2_decision)
+      $zukan.sort_by_speed(master1, master1_decision, master2, master2_decision).each do |action|
+        master, decision, target = action
 
-      act(first, second, first_decision)
-      if gameover?(pokemon1, pokemon2)
-        break
+        if master['skip?']
+          next
+        end
+
+        act(master, target, decision)
+      
+        [master, target].each do |m|
+          if m['cur_pokemon']['hp'] <= 0
+            puts '------------------------------'
+            if m['player']
+              printf "%s はたおれた！\n", m['cur_pokemon']['name']
+            else
+              printf "あいての %sは たおれた！\n", m['cur_pokemon']['name']
+            end
+
+            if gameover?(m)
+              if m['player?']
+                puts 'しょうぶに まけた'
+              else
+                puts 'しょうぶに かった！'
+              end
+
+              return
+            end
+
+            m['pokemons'].each_with_index do |pokemon, number|
+              if pokemon['hp'] > 0
+                printf "%sを くりだした！\n", pokemon['name']
+                m['cur_pokemon'] = pokemon
+                m['cur_number'] = number
+
+                m['skip?'] = true
+                break
+              end
+            end
+          end
+        end
+
+        puts
       end
-      
-      puts
-
-      act(second, first, second_decision)
-      if gameover?(pokemon1, pokemon2)
-        break
-      end
-
-      puts
 
       puts '------------------------------'
 

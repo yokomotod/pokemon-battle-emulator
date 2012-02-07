@@ -16,19 +16,18 @@ end
 
 $zukan = PokemonZukan.new
 
-pokemon =  $zukan.pokemon(pokemon_name, 100)
-pokemon['player?'] = auto_battle ? false : true
+player = $zukan.pokemon_master([
+                                ['フシギバナ', 100],
+                                ['リザードン', 100],
+                                ['カメックス', 100]
+                               ])
+player['player?'] = auto_battle ? false : true
 
-enemy =  $zukan.pokemon(enemy_name, 100)
+enemy = $zukan.pokemon_master([
+                               ['メガニウム', 100],
+                               ['バクフーン', 100],
+                               ['オーダイル', 100],
+                              ])
 enemy['player?'] = false
 
-# pokemon = $zukan.pokemon('ミュウツー', 100, [
-#                                              'サイコブレイク',
-#                                              'はどうだん',
-#                                              'れいとうビーム',
-#                                              # 'シャドーボール',
-#                                              'めいそう',
-#                                             ])
-# enemy =  $zukan.pokemon('リザードン', 100, [0,0,0,0,0,0], [0,0,0,0,0,0])
-
-$zukan.battle(pokemon, enemy)
+$zukan.battle(player, enemy)
