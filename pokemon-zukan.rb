@@ -995,7 +995,7 @@ class PokemonZukan
 
       master['cur_number'] = decision
       master['cur_pokemon'] = master['pokemons'][decision]
-      printf "いけ！ %s\n", master['cur_pokemon']['name']
+      printf "いけ！ %s！\n", master['cur_pokemon']['name']
 
       master['skip?'] = true
 
@@ -1052,7 +1052,7 @@ class PokemonZukan
             puts
             puts '------------------------------'
             if m['player?']
-              printf "%s はたおれた！\n", m['cur_pokemon']['name']
+              printf "%sは たおれた！\n", m['cur_pokemon']['name']
             else
               printf "あいての %sは たおれた！\n", m['cur_pokemon']['name']
             end
