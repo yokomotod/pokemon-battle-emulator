@@ -642,11 +642,15 @@ class PokemonZukan
       else
         damage = damage_proc(attacker, target, skill)  
       end
+
+      if target['hp'] < 0
+        target['hp'] = 0
+      end
     end
 
     sleep(1)
 
-    if target['hp'] <= 0
+    if target['hp'] == 0
       return
     end
 
@@ -814,14 +818,14 @@ class PokemonZukan
   end
 
   def show_status (pokemon)
-    printf "%s Lv%d %s\n", pokemon['name'], pokemon['level'], pokemon['type'].join('／')
+    printf "%s Lv%3d %s\n", pokemon['name'], pokemon['level'], pokemon['type'].join('／')
     if pokemon['state'].size != 0
       printf " ### %s ###\n", pokemon['state'].keys.map{|x| $zukan.state_str[x] }.join(' ')
     end
     if pokemon['special_state'].size != 0
       printf " ### %s ###\n", pokemon['special_state'].keys.map{|x| $zukan.state_str[x] }.join(' ')
     end
-    printf " HP:%d／%d\n", pokemon['hp'], pokemon['max_hp']
+    printf " HP:%3d／%3d\n", pokemon['hp'], pokemon['max_hp']
     printf " こうげき:%3d ぼうぎょ:%3d とくこう:%3d とくぼう:%3d すばやさ:%3d\n",
     pokemon['attack'], pokemon['defence'], pokemon['sp_atk'], pokemon['sp_def'], pokemon['speed']
   end
@@ -853,7 +857,7 @@ class PokemonZukan
         loop do
           printf "%2d : もどる\n", 0
           pokemon['skill'].each_with_index do |skill, i|
-            printf "%2d : %s PP %d／%d わざタイプ／%s \n",
+            printf "%2d : %s PP %2d／%2d わざタイプ／%s \n",
             i+1, skill['name'], skill['pp'], skill['max_pp'], skill['type']
           end
 
@@ -889,7 +893,7 @@ class PokemonZukan
         loop do
           printf "%d : もどる\n", 0
           master['pokemons'].each_with_index do |pokemon, i|
-            printf "%d : %s Lv%d HP%d／%d タイプ%s \n",
+            printf "%d : %s Lv%3d HP%3d／%3d タイプ%s \n",
             i+1, pokemon['name'], pokemon['level'], pokemon['hp'], pokemon['max_hp'], pokemon['type'].join('／')
           end
           print '> '
@@ -968,7 +972,7 @@ class PokemonZukan
     loop do
       puts 'どのポケモンを だしますか？'
       master['pokemons'].each_with_index do |pokemon, i|
-        printf "%d : %s Lv%d HP%d／%d タイプ%s \n",
+        printf "%d : %s Lv%3d HP%3d／%3d タイプ%s \n",
         i+1, pokemon['name'], pokemon['level'], pokemon['hp'], pokemon['max_hp'], pokemon['type'].join('／')
       end
       print '> '
