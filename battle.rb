@@ -2,8 +2,8 @@
 
 require './pokemon-zukan.rb'
 
-if ARGV.size < 2
-  abort(sprintf "usage : %s your_pokemon enemy_pokemon\n", $0)
+if ARGV.size == 1 && ARGV[0] == '-h'
+  abort(sprintf "usage : %s [auto_battle]\n", $0)
 end
 
 pokemon_name = ARGV.shift

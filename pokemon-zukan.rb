@@ -828,7 +828,6 @@ class PokemonZukan
 
   def get_input (master)
     loop do
-      puts
       puts 'どうする？'
 
       puts '1 たたかう'
@@ -865,11 +864,12 @@ class PokemonZukan
             next
           end
 
-          if decision == 0
-            next
+          decision = decision.to_i - 1
+
+          if decision == -1
+            break
           end
 
-          decision = decision.to_i - 1
           
           if decision < 0 || decision >= pokemon['skill'].size
             next
@@ -899,11 +899,11 @@ class PokemonZukan
             next
           end
 
-          if decision == 0
-            next
-          end
-
           decision = decision.to_i - 1
+
+          if decision == -1
+            break
+          end
 
           if decision < 0 || decision >= master['pokemons'].size
             next
@@ -964,6 +964,54 @@ class PokemonZukan
     end
   end
 
+  def get_input_for_next_pokemon (master)
+    loop do
+      puts 'どのポケモンを だしますか？'
+      master['pokemons'].each_with_index do |pokemon, i|
+        printf "%d : %s Lv%d HP%d／%d タイプ%s \n",
+        i+1, pokemon['name'], pokemon['level'], pokemon['hp'], pokemon['max_hp'], pokemon['type'].join('／')
+      end
+      print '> '
+      decision = gets
+
+      if decision !~ /^\d+$/
+        next
+      end
+      
+      decision = decision.to_i - 1
+
+      if decision < 0 || decision >= master['pokemons'].size
+        next
+      end
+
+      if master['pokemons'][decision]['hp'] <= 0
+        printf "%sは ひんしだ\n", master['pokemons'][decision]['name']
+        next
+      end
+
+      master['cur_number'] = decision
+      master['cur_pokemon'] = master['pokemons'][decision]
+      printf "いけ！ %s\n", master['cur_pokemon']['name']
+
+      master['skip?'] = true
+
+      return 
+    end
+  end
+
+  def next_pokemon (master)
+    master['pokemons'].each_with_index do |pokemon, number|
+      if pokemon['hp'] > 0
+        printf "あいては %sを くりだした！\n", pokemon['name']
+        master['cur_pokemon'] = pokemon
+        master['cur_number'] = number
+
+        master['skip?'] = true
+        break
+      end
+    end
+  end 
+
   def battle (master1, master2)
     loop do
 
@@ -977,8 +1025,6 @@ class PokemonZukan
       show_status(pokemon2)
 
       puts
-
-      sleep(1)
 
       master1_decision = master1['player?'] ? get_input(master1) : $zukan.make_decision(pokemon1, pokemon2)
       
@@ -995,14 +1041,19 @@ class PokemonZukan
 
         act(master, target, decision)
       
-        [master, target].each do |m|
+        sleep(1)
+
+        [target, master].each do |m|
           if m['cur_pokemon']['hp'] <= 0
+            puts
             puts '------------------------------'
-            if m['player']
+            if m['player?']
               printf "%s はたおれた！\n", m['cur_pokemon']['name']
             else
               printf "あいての %sは たおれた！\n", m['cur_pokemon']['name']
             end
+
+            sleep(1)
 
             if gameover?(m)
               if m['player?']
@@ -1014,16 +1065,13 @@ class PokemonZukan
               return
             end
 
-            m['pokemons'].each_with_index do |pokemon, number|
-              if pokemon['hp'] > 0
-                printf "%sを くりだした！\n", pokemon['name']
-                m['cur_pokemon'] = pokemon
-                m['cur_number'] = number
-
-                m['skip?'] = true
-                break
-              end
+            if m['player?']
+              get_input_for_next_pokemon(m)
+            else
+              next_pokemon(m)
             end
+            puts
+            sleep(1)
           end
         end
 
