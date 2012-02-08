@@ -6,9 +6,9 @@ if ARGV.size == 1 && ARGV[0] == '-h'
   abort(sprintf "usage : %s [auto_battle]\n", $0)
 end
 
-pokemon_name = ARGV.shift
-enemy_name = ARGV.shift
-if ARGV.size == 3
+if ARGV.size == 1 && ARGV[0] == 'auto_battle'
+  puts 'auto_battle mode'
+  puts
   auto_battle = true
 else
   auto_battle = false
@@ -21,7 +21,7 @@ player = $zukan.pokemon_master([
                                 ['リザードン', 100],
                                 ['カメックス', 100]
                                ])
-player['player?'] = auto_battle ? false : true
+player['player?'] = !auto_battle
 
 enemy = $zukan.pokemon_master([
                                ['メガニウム', 100],

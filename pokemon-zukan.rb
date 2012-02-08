@@ -923,12 +923,12 @@ class PokemonZukan
             next
           end
 
-          printf "もどれ！ %s\n", master['cur_pokemon']['name']
+          printf "もどれ！ %s！\n", master['cur_pokemon']['name']
 
           master['cur_number'] = decision
           master['cur_pokemon'] = master['pokemons'][decision]
 
-          printf "いけ！ %s\n", master['cur_pokemon']['name']
+          printf "いけ！ %s！\n", master['cur_pokemon']['name']
 
           return -1
         end
@@ -955,7 +955,7 @@ class PokemonZukan
   def gameover?(master)
     alive = false
     master['pokemons'].each do |pokemon|
-      if pokemon['hp'] >= 0
+      if pokemon['hp'] > 0
         alive = true
         break
       end
@@ -1061,7 +1061,7 @@ class PokemonZukan
 
             if gameover?(m)
               if m['player?']
-                puts 'しょうぶに まけた'
+                puts 'しょうぶに まけた・・・'
               else
                 puts 'しょうぶに かった！'
               end
